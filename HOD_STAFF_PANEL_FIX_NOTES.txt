@@ -1,0 +1,5 @@
+Updated only the requested parts:
+- Separate HOD panel navigation and department overview menu
+- HOD login now lands on HOD overview instead of staff dashboard
+- Staff dashboard now redirects HOD accounts to HOD panel
+- Staff sidebar cleaned so student features no longer appear in staff panel

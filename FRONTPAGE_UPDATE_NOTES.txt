@@ -1,0 +1,6 @@
+Front page updated with real R N Shetty Polytechnic photos.
+Changes made:
+- Replaced placeholder/anime-like front page assets with real uploaded campus photos.
+- Added official college banner/logo to the top of the login/front page.
+- Updated guest portal hero image to use a real campus photo.
+- Added 5-photo campus gallery on the front page.

@@ -1,0 +1,24 @@
+Added features in this edited project:
+
+1. Vision & Mission management
+   - Admin can update college name, vision, mission, and about section.
+   - Shown on login page.
+   - Guest portal added to view public college info.
+
+2. Syllabus copy upload system
+   - Admin can upload syllabus files course-wise.
+   - Admin can view and delete uploaded syllabus files.
+   - Staff can view syllabus for their course.
+   - Students can view syllabus for their course.
+
+3. Staff student directory
+   - Staff can view structured student details for their course.
+   - Includes name, email, gender, session, and address.
+   - Search by name or email.
+
+4. Sidebar updates
+   - New menu links added for the above modules.
+
+5. Database note
+   - The included db.sqlite3 was updated with new tables for CollegeProfile and SyllabusDocument.
+   - If you start with a fresh database, create migrations in a Python/Django version compatible with this project.

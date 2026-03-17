@@ -1,0 +1,15 @@
+{% extends 'main_app/base.html' %}
+{% block custom_css %}
+<style>
+.cardx{background:#fff;border-radius:18px;padding:18px;box-shadow:0 10px 26px rgba(0,0,0,.06);margin-top:18px}.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef2ff;font-size:12px}
+</style>
+{% endblock %}
+{% block content %}
+<div class='cardx'>
+  <h4 class='mb-2'>{{ department.name|default:'Department Data' }}</h4>
+  <p class='text-muted mb-0'>This page shows only the students, staff and subjects that belong to the logged-in HOD department.</p>
+</div>
+<div class='cardx'><h4>Students</h4><table class='table'><tr><th>Name</th><th>Register No</th><th>Course</th><th>Guardian</th><th>Status</th></tr>{% for s in students %}<tr><td>{{ s.admin.first_name }} {{ s.admin.last_name }}</td><td>{{ s.registration_number|default:'-' }}</td><td>{{ s.course|default:'-' }}</td><td>{{ s.guardian_name|default:'-' }}</td><td><span class='pill'>{{ s.approval_status }}</span></td></tr>{% empty %}<tr><td colspan='5'>No students in this department.</td></tr>{% endfor %}</table></div>
+<div class='cardx'><h4>Staff</h4><table class='table'><tr><th>Name</th><th>Employee ID</th><th>Designation</th><th>Course</th><th>Status</th></tr>{% for member in staff_members %}<tr><td>{{ member.admin.first_name }} {{ member.admin.last_name }}</td><td>{{ member.employee_id|default:'-' }}</td><td>{{ member.designation|default:'-' }}</td><td>{{ member.course|default:'-' }}</td><td><span class='pill'>{{ member.approval_status }}</span></td></tr>{% empty %}<tr><td colspan='5'>No staff in this department.</td></tr>{% endfor %}</table></div>
+<div class='cardx'><h4>Subjects</h4><table class='table'><tr><th>Subject</th><th>Faculty</th><th>Course</th></tr>{% for subject in subjects %}<tr><td>{{ subject.name }}</td><td>{{ subject.staff.admin.first_name }} {{ subject.staff.admin.last_name }}</td><td>{{ subject.course.name }}</td></tr>{% empty %}<tr><td colspan='3'>No subjects assigned.</td></tr>{% endfor %}</table></div>
+{% endblock %}

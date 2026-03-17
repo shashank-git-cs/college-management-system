@@ -1,0 +1,23 @@
+Updated for R N Shetty Polytechnic demo build.
+
+Added / improved:
+- New public homepage/login page branded for R N Shetty Polytechnic
+- Guest portal with About, Vision, Mission, Syllabus and campus gallery
+- Placeholder campus images in main_app/static/home/
+- Demo data inserted into db.sqlite3 for courses, notices, fees, certificates, online classes and face attendance logs
+- HOD login redirect support for staff mapped as department HOD
+- HOD dashboard shows department-wise staff and student data
+- HOD approvals limited to department/course scope
+- Online class scheduling page improved with Google Meet and Air Canvas link
+- Air Canvas updated with brush, color, eraser, clear and save tools
+- Face Attendance Center updated with camera preview, snapshot and manual backup flow
+
+Photo replacement:
+- Replace files inside main_app/static/home/
+  campus-1.svg
+  campus-2.svg
+  campus-3.svg
+with your real college photos if needed.
+
+Demo users already in the database may exist from the base project.
+Create your own superuser for production use.

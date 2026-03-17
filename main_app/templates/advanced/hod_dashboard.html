@@ -1,0 +1,310 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}HOD Dashboard{% endblock page_title %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item active">HOD Dashboard</li>
+{% endblock breadcrumb %}
+
+{% block custom_css %}
+<style>
+    .mini-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#eef2ff;color:#3147c6;font-size:12px;font-weight:600}
+    .section-card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 10px 26px rgba(0,0,0,.06)}
+    .section-card + .section-card{margin-top:18px}
+    .compact-table td,.compact-table th{vertical-align:middle}
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="section-card mb-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <div class="mini-badge mb-2"><i class="fas fa-sitemap"></i> {{ department_name }}</div>
+                <h3 class="mb-1">Head of Department Control Panel</h3>
+                <p class="text-muted mb-0">Separate HOD dashboard with staff-style layout and extra department-level access.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'hod_department_data' %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-users me-1"></i> Department Data</a>
+                <a href="{% url 'hod_approvals' %}" class="btn btn-primary btn-sm"><i class="fas fa-user-check me-1"></i> Approvals</a>
+                <a href="{% url 'hod_notice_board' %}" class="btn btn-outline-dark btn-sm"><i class="fas fa-bullhorn me-1"></i> Notices</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon primary"><i class="fas fa-user-graduate"></i></div>
+            <div class="stat-number" style="color: var(--primary-color);">{{ student_count }}</div>
+            <p class="stat-label">Department Students</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon success"><i class="fas fa-user-tie"></i></div>
+            <div class="stat-number" style="color: var(--success-color);">{{ staff_count }}</div>
+            <p class="stat-label">Department Staff</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon warning"><i class="fas fa-book"></i></div>
+            <div class="stat-number" style="color: var(--warning-color);">{{ subject_count }}</div>
+            <p class="stat-label">Subjects Controlled</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon danger"><i class="fas fa-user-clock"></i></div>
+            <div class="stat-number" style="color: var(--danger-color);">{{ pending_students|add:pending_staff }}</div>
+            <p class="stat-label">Pending Approvals</p>
+        </div>
+    </div>
+
+    <div class="row mt-1">
+        <div class="col-lg-6">
+            <div class="erpnext-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-chart-pie me-2"></i>Approval & Notice Overview</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="hodPieChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="erpnext-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-chart-bar me-2"></i>Subject Activity Snapshot</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="hodBarChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="erpnext-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-bolt me-2"></i>HOD Quick Actions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'hod_approvals' %}" class="btn btn-primary btn-sm mt-2 w-100">
+                                <i class="fas fa-user-check mb-2"></i><br>
+                                Review Approvals
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'hod_department_data' %}" class="btn btn-success btn-sm mt-2 w-100">
+                                <i class="fas fa-database mb-2"></i><br>
+                                Department Data
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'hod_notice_board' %}" class="btn btn-warning btn-sm mt-2 w-100">
+                                <i class="fas fa-bullhorn mb-2"></i><br>
+                                Publish Notice
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'staff_take_attendance' %}" class="btn btn-secondary btn-sm mt-2 w-100">
+                                <i class="fas fa-check-circle mb-2"></i><br>
+                                Take Attendance
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'staff_add_result' %}" class="btn btn-outline-primary btn-sm mt-2 w-100">
+                                <i class="fas fa-chart-line mb-2"></i><br>
+                                Upload Results
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'staff_online_classes' %}" class="btn btn-outline-success btn-sm mt-2 w-100">
+                                <i class="fas fa-video mb-2"></i><br>
+                                Online Classes
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'staff_air_canvas' %}" class="btn btn-outline-warning btn-sm mt-2 w-100">
+                                <i class="fas fa-pen mb-2"></i><br>
+                                Air Canvas
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'unified_search' %}" class="btn btn-outline-dark btn-sm mt-2 w-100">
+                                <i class="fas fa-search mb-2"></i><br>
+                                Smart Search
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="section-card">
+                <h5 class="mb-3"><i class="fas fa-users me-2 text-primary"></i>Department Staff</h5>
+                <div class="table-responsive">
+                    <table class="table compact-table">
+                        <thead>
+                            <tr><th>Name</th><th>Employee ID</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for member in staff_members %}
+                            <tr>
+                                <td>{{ member.admin.first_name }} {{ member.admin.last_name }}</td>
+                                <td>{{ member.employee_id|default:'-' }}</td>
+                                <td><span class="badge bg-light text-dark">{{ member.approval_status }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3">No department staff found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="section-card">
+                <h5 class="mb-3"><i class="fas fa-user-graduate me-2 text-success"></i>Department Students</h5>
+                <div class="table-responsive">
+                    <table class="table compact-table">
+                        <thead>
+                            <tr><th>Name</th><th>Reg No</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for s in students %}
+                            <tr>
+                                <td>{{ s.admin.first_name }} {{ s.admin.last_name }}</td>
+                                <td>{{ s.registration_number|default:'-' }}</td>
+                                <td><span class="badge bg-light text-dark">{{ s.approval_status }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3">No department students found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-1">
+        <div class="col-xl-6">
+            <div class="section-card">
+                <h5 class="mb-3"><i class="fas fa-bullhorn me-2 text-warning"></i>Recent Department Notices</h5>
+                <div class="table-responsive">
+                    <table class="table compact-table">
+                        <thead>
+                            <tr><th>Title</th><th>Target</th><th>Date</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for notice in department_notices %}
+                            <tr>
+                                <td>{{ notice.title }}</td>
+                                <td>{{ notice.get_target_role_display }}</td>
+                                <td>{{ notice.created_at|date:"d M Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3">No notices yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="section-card">
+                <h5 class="mb-3"><i class="fas fa-video me-2 text-danger"></i>Online Class Queue</h5>
+                <div class="table-responsive">
+                    <table class="table compact-table">
+                        <thead>
+                            <tr><th>Title</th><th>Subject</th><th>Schedule</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for session in online_sessions %}
+                            <tr>
+                                <td>{{ session.title }}</td>
+                                <td>{{ session.subject.name }}</td>
+                                <td>{{ session.scheduled_for|date:"d M Y h:i A" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3">No online classes scheduled yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        window.chartInstances = window.chartInstances || [];
+
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        const textColor = isDarkMode ? '#e0e0e0' : '#262626';
+        Chart.defaults.color = textColor;
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif';
+
+        const colors = {
+            primary: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#5e64ff',
+            success: getComputedStyle(document.documentElement).getPropertyValue('--success-color').trim() || '#28a745',
+            warning: getComputedStyle(document.documentElement).getPropertyValue('--warning-color').trim() || '#ffc107',
+            danger: getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim() || '#dc3545',
+            info: getComputedStyle(document.documentElement).getPropertyValue('--info-color').trim() || '#17a2b8'
+        };
+
+        const pieCtx = document.getElementById('hodPieChart');
+        if (pieCtx) {
+            window.chartInstances.push(new Chart(pieCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending Students', 'Pending Staff', 'Notices', 'Online Classes'],
+                    datasets: [{
+                        data: [{{ pending_students }}, {{ pending_staff }}, {{ notice_count }}, {{ online_class_count }}],
+                        backgroundColor: [colors.warning, colors.danger, colors.primary, colors.success],
+                        borderWidth: 0,
+                        cutout: '60%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            }));
+        }
+
+        const barCtx = document.getElementById('hodBarChart');
+        if (barCtx) {
+            window.chartInstances.push(new Chart(barCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: [{% for label in subject_labels %}'{{ label|escapejs }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    datasets: [{
+                        label: 'Attendance Records',
+                        data: [{% for value in subject_attendance_counts %}{{ value }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                        backgroundColor: colors.primary,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            }));
+        }
+    });
+</script>
+{% endblock custom_js %}

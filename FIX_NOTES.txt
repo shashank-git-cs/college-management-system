@@ -1,0 +1,18 @@
+R N Shetty project quick fix
+
+This ZIP includes fixed Django migrations for main_app and safer settings.py database handling.
+
+Run from the folder with manage.py:
+1. python -m venv venv
+2. venv\Scripts\activate
+3. pip install -r requirements.txt
+4. pip install dj-database-url==0.5.0
+5. python manage.py runserver
+
+If you want to apply migrations on a fresh database:
+1. delete db.sqlite3
+2. python manage.py migrate
+3. python manage.py createsuperuser
+4. python manage.py runserver
+
+If db.sqlite3 is kept, you can usually start directly with runserver.

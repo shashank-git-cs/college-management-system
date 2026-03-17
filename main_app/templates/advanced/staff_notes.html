@@ -1,0 +1,13 @@
+{% extends 'main_app/base.html' %}
+{% block custom_css %}
+<style>
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.stat-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.table-card,.form-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);margin-top:18px}.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef2ff;font-size:12px}.video-box{background:#111;border-radius:16px;min-height:280px;display:flex;align-items:center;justify-content:center;color:#fff;overflow:auto}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class='form-card'><h4>Upload Notes</h4><form method='post' enctype='multipart/form-data'>{% csrf_token %}<div class='row g-3'><div class='col-md-3'><select class='form-select' name='subject'>{% for s in subjects %}<option value='{{ s.id }}'>{{ s.name }}</option>{% endfor %}</select></div><div class='col-md-4'><input class='form-control' name='title' placeholder='Material title'></div><div class='col-md-5'><input class='form-control' name='external_link' placeholder='External / Drive link (optional)'></div><div class='col-md-12'><textarea class='form-control' name='description' placeholder='Description'></textarea></div><div class='col-md-8'><input class='form-control' type='file' name='file'></div><div class='col-md-4'><button class='btn btn-primary w-100'>Upload</button></div></div></form></div>
+<div class='table-card'><table class='table'><tr><th>Title</th><th>Subject</th><th>Link/File</th><th>Created</th></tr>{% for item in materials %}<tr><td>{{ item.title }}</td><td>{{ item.subject.name }}</td><td>{% if item.external_link %}<a href='{{ item.external_link }}' target='_blank'>Open link</a>{% elif item.file %}<a href='{{ item.file.url }}' target='_blank'>Download</a>{% else %}-{% endif %}</td><td>{{ item.created_at }}</td></tr>{% empty %}<tr><td colspan='4'>No notes uploaded.</td></tr>{% endfor %}</table></div>
+
+{% endblock %}

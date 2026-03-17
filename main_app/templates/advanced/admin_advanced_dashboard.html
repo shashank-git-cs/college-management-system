@@ -1,0 +1,21 @@
+{% extends 'main_app/base.html' %}
+{% block custom_css %}
+<style>
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.stat-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.table-card,.form-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);margin-top:18px}.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef2ff;font-size:12px}.video-box{background:#111;border-radius:16px;min-height:280px;display:flex;align-items:center;justify-content:center;color:#fff;overflow:auto}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class='stat-grid'>
+<div class='stat-card'><h3>{{ departments|length }}</h3><p>Departments</p></div>
+<div class='stat-card'><h3>{{ pending_students }}</h3><p>Pending student approvals</p></div>
+<div class='stat-card'><h3>{{ pending_staff }}</h3><p>Pending staff approvals</p></div>
+<div class='stat-card'><h3>{{ fees_due }}</h3><p>Open fee records</p></div>
+<div class='stat-card'><h3>{{ exam_count }}</h3><p>Exam schedules</p></div>
+<div class='stat-card'><h3>{{ certificate_count }}</h3><p>Generated certificates</p></div>
+</div>
+<div class='table-card'><h4>Recent face attendance activity</h4><table class='table'><tr><th>User</th><th>Role</th><th>Mode</th><th>Subject</th><th>Time</th></tr>{% for log in face_logs %}<tr><td>{{ log.user }}</td><td>{{ log.role }}</td><td>{{ log.mode }}</td><td>{{ log.subject|default:'-' }}</td><td>{{ log.captured_at }}</td></tr>{% empty %}<tr><td colspan='5'>No logs yet.</td></tr>{% endfor %}</table></div>
+<div class='table-card'><h4>Advanced modules included</h4><ul><li>Department + HOD workflow</li><li>Fee, exams, and reports modules</li><li>Online classes with Meet links</li><li>Air Canvas teaching board</li><li>Face attendance center with manual backup</li><li>Unified smart search</li></ul></div>
+
+{% endblock %}

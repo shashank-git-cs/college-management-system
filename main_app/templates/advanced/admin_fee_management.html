@@ -1,0 +1,13 @@
+{% extends 'main_app/base.html' %}
+{% block custom_css %}
+<style>
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.stat-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.table-card,.form-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);margin-top:18px}.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef2ff;font-size:12px}.video-box{background:#111;border-radius:16px;min-height:280px;display:flex;align-items:center;justify-content:center;color:#fff;overflow:auto}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class='form-card'><h4>Create Fee Record</h4><form method='post'>{% csrf_token %}<div class='row g-3'><div class='col-md-3'><select class='form-select' name='student' required><option value=''>Student</option>{% for s in students %}<option value='{{ s.id }}'>{{ s.admin.first_name }} {{ s.admin.last_name }}</option>{% endfor %}</select></div><div class='col-md-2'><input class='form-control' name='title' placeholder='Fee title'></div><div class='col-md-2'><input class='form-control' type='number' step='0.01' name='amount' placeholder='Amount'></div><div class='col-md-2'><input class='form-control' type='date' name='due_date'></div><div class='col-md-2'><select class='form-select' name='status'><option>pending</option><option>partial</option><option>paid</option><option>overdue</option></select></div><div class='col-md-1'><button class='btn btn-primary w-100'>Add</button></div><div class='col-md-3'><input class='form-control' name='receipt_number' placeholder='Receipt no'></div><div class='col-md-9'><input class='form-control' name='remarks' placeholder='Remarks'></div></div></form></div>
+<div class='table-card'><table class='table'><tr><th>Student</th><th>Title</th><th>Amount</th><th>Status</th><th>Due</th><th>Receipt</th></tr>{% for item in fee_records %}<tr><td>{{ item.student }}</td><td>{{ item.title }}</td><td>{{ item.amount }}</td><td><span class='pill'>{{ item.status }}</span></td><td>{{ item.due_date }}</td><td>{{ item.receipt_number }}</td></tr>{% empty %}<tr><td colspan='6'>No fee records.</td></tr>{% endfor %}</table></div>
+
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'main_app/base.html' %}
+{% block custom_css %}
+<style>.table-card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 10px 26px rgba(0,0,0,.06);margin-top:18px}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}.video-box{background:#111;border-radius:16px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px}.video-box video,.video-box canvas{width:100%;border-radius:12px;background:#fff}.swatch{width:34px;height:34px;border-radius:50%;border:2px solid #d1d5db;cursor:pointer}.active-swatch{transform:scale(1.08);border-color:#111827}</style>
+{% endblock %}
+{% block content %}
+<div class='table-card'><h4>Air Canvas Virtual Teaching Board</h4><p>Staff and HOD can open the webcam, draw on the virtual board, switch colors, use eraser mode, change brush size and save the board as an image. This is a browser-based canvas board prepared for classroom demonstrations.</p><div class='toolbar'><button class='btn btn-primary' onclick='startCam()'>Start Webcam</button><button class='btn btn-outline-dark' onclick='stopCam()'>Stop Webcam</button><button class='btn btn-outline-secondary' onclick='toggleDraw()'>Draw / Pause</button><button class='btn btn-outline-secondary' onclick='setEraser(false)'>Pen</button><button class='btn btn-outline-secondary' onclick='setEraser(true)'>Eraser</button><input type='range' min='1' max='20' value='4' id='brushRange'><button class='swatch active-swatch' style='background:#111827' onclick="setColor('#111827', this)"></button><button class='swatch' style='background:#2563eb' onclick="setColor('#2563eb', this)"></button><button class='swatch' style='background:#dc2626' onclick="setColor('#dc2626', this)"></button><button class='swatch' style='background:#16a34a' onclick="setColor('#16a34a', this)"></button><button class='btn btn-outline-danger' onclick='clearBoard()'>Clear</button><button class='btn btn-success' onclick='saveBoard()'>Save PNG</button></div><div class='video-box'><video id='video' autoplay playsinline></video><canvas id='board' width='960' height='540'></canvas></div></div>
+<div class='table-card'><h4>Recent online classes</h4><table class='table'><tr><th>Title</th><th>Subject</th><th>Schedule</th><th>Meet</th><th>Canvas</th></tr>{% for session in online_sessions %}<tr><td>{{ session.title }}</td><td>{{ session.subject.name }}</td><td>{{ session.scheduled_for }}</td><td>{% if session.meet_link %}<a href='{{ session.meet_link }}' target='_blank'>Open Meet</a>{% else %}-{% endif %}</td><td>{{ session.air_canvas_enabled|yesno:'Enabled,Disabled' }}</td></tr>{% empty %}<tr><td colspan='5'>No recent classes.</td></tr>{% endfor %}</table></div>
+<script>
+const video=document.getElementById('video');
+const canvas=document.getElementById('board');
+const ctx=canvas.getContext('2d');
+const brushRange=document.getElementById('brushRange');
+let isDrawingEnabled=true;
+let isPointerDown=false;
+let erasing=false;
+let brushColor='#111827';
+let activeStream=null;
+ctx.lineJoin='round';
+ctx.lineCap='round';
+ctx.fillStyle='#ffffff';
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+async function startCam(){
+  try{
+    if(activeStream){ return; }
+    const stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+    activeStream=stream;
+    video.srcObject=stream;
+  }catch(e){
+    alert('Camera access was blocked. Please allow webcam permission.');
+  }
+}
+function stopCam(){
+  if(activeStream){ activeStream.getTracks().forEach(t=>t.stop()); activeStream=null; }
+  video.srcObject=null;
+}
+function setColor(color, el){
+  brushColor=color;
+  erasing=false;
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active-swatch'));
+  if(el){ el.classList.add('active-swatch'); }
+}
+function setEraser(value){ erasing=value; }
+function toggleDraw(){ isDrawingEnabled=!isDrawingEnabled; }
+function getPoint(evt){
+  const rect=canvas.getBoundingClientRect();
+  const touch=evt.touches && evt.touches[0] ? evt.touches[0] : evt;
+  return {
+    x:(touch.clientX-rect.left)*(canvas.width/rect.width),
+    y:(touch.clientY-rect.top)*(canvas.height/rect.height)
+  };
+}
+function beginStroke(evt){
+  if(!isDrawingEnabled) return;
+  evt.preventDefault();
+  isPointerDown=true;
+  const p=getPoint(evt);
+  ctx.beginPath();
+  ctx.moveTo(p.x,p.y);
+}
+function draw(evt){
+  if(!isPointerDown || !isDrawingEnabled) return;
+  evt.preventDefault();
+  const p=getPoint(evt);
+  ctx.strokeStyle=erasing ? '#ffffff' : brushColor;
+  ctx.lineWidth=parseInt(brushRange.value,10);
+  ctx.lineTo(p.x,p.y);
+  ctx.stroke();
+}
+function endStroke(){
+  isPointerDown=false;
+  ctx.beginPath();
+}
+canvas.addEventListener('mousedown', beginStroke);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseup', endStroke);
+canvas.addEventListener('mouseleave', endStroke);
+canvas.addEventListener('touchstart', beginStroke, {passive:false});
+canvas.addEventListener('touchmove', draw, {passive:false});
+canvas.addEventListener('touchend', endStroke, {passive:false});
+canvas.addEventListener('touchcancel', endStroke, {passive:false});
+function clearBoard(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+function saveBoard(){ const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='air-canvas-board.png'; a.click(); }
+window.addEventListener('beforeunload', stopCam);
+</script>
+{% endblock %}

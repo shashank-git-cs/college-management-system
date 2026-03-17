@@ -1,0 +1,14 @@
+{% extends 'main_app/base.html' %}
+{% block custom_css %}
+<style>
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.stat-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.table-card,.form-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);margin-top:18px}.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef2ff;font-size:12px}.video-box{background:#111;border-radius:16px;min-height:280px;display:flex;align-items:center;justify-content:center;color:#fff;overflow:auto}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class='stat-grid'>{% for row in fee_summary %}<div class='stat-card'><h3>{{ row.total }}</h3><p>Fees {{ row.status }}</p></div>{% endfor %}{% for row in attendance_summary %}<div class='stat-card'><h3>{{ row.total }}</h3><p>Attendance via {{ row.mode }}</p></div>{% endfor %}</div>
+<div class='table-card'><h4>Generated Certificates</h4><table class='table'><tr><th>Student</th><th>Type</th><th>Reference</th><th>Generated</th></tr>{% for c in certificates %}<tr><td>{{ c.student }}</td><td>{{ c.get_certificate_type_display }}</td><td>{{ c.reference_number }}</td><td>{{ c.generated_at }}</td></tr>{% empty %}<tr><td colspan='4'>No certificates generated yet.</td></tr>{% endfor %}</table></div>
+<div class='table-card'><h4>Supported outputs</h4><p>ID cards, bonafide certificates, fee receipts, marksheets, attendance reports, and department summaries are modelled in the database and can be expanded into printable PDFs.</p></div>
+
+{% endblock %}

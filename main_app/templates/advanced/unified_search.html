@@ -1,0 +1,13 @@
+{% extends 'main_app/base.html' %}
+{% block custom_css %}
+<style>
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.stat-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.table-card,.form-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);margin-top:18px}.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef2ff;font-size:12px}.video-box{background:#111;border-radius:16px;min-height:280px;display:flex;align-items:center;justify-content:center;color:#fff;overflow:auto}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class='form-card'><form method='get'><div class='row g-2'><div class='col-md-8'><input class='form-control' name='q' value='{{ q }}' placeholder='Search students, staff, fees, notices, documents, attendance, results...'></div><div class='col-md-3'><select class='form-select' name='scope'><option value='all'>All</option><option value='students' {% if scope == 'students' %}selected{% endif %}>Students</option><option value='staff' {% if scope == 'staff' %}selected{% endif %}>Staff</option><option value='fees' {% if scope == 'fees' %}selected{% endif %}>Fees</option><option value='attendance' {% if scope == 'attendance' %}selected{% endif %}>Attendance</option><option value='documents' {% if scope == 'documents' %}selected{% endif %}>Documents</option><option value='notices' {% if scope == 'notices' %}selected{% endif %}>Notices</option><option value='results' {% if scope == 'results' %}selected{% endif %}>Results</option></select></div><div class='col-md-1'><button class='btn btn-primary w-100'>Go</button></div></div></form></div>
+{% for key, items in results.items %}<div class='table-card'><h4 style='text-transform:capitalize'>{{ key }}</h4><table class='table'><tr><th>Name / Title</th><th>Details</th></tr>{% for item in items %}<tr><td>{% if key == 'students' %}{{ item.admin.first_name }} {{ item.admin.last_name }}{% elif key == 'staff' %}{{ item.admin.first_name }} {{ item.admin.last_name }}{% else %}{{ item }}{% endif %}</td><td>{{ item }}</td></tr>{% empty %}<tr><td colspan='2'>No matches.</td></tr>{% endfor %}</table></div>{% empty %}<div class='table-card'>Use the smart search bar to search instantly across major records.</div>{% endfor %}
+
+{% endblock %}
