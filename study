@@ -1,0 +1,291 @@
+import pygame
+import random
+import math
+from enum import Enum
+
+# Initialize Pygame
+pygame.init()
+
+# Constants
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+FPS = 60
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 100, 255)
+YELLOW = (255, 255, 0)
+
+class GameState(Enum):
+    PLAYING = 1
+    GAME_OVER = 2
+    PAUSED = 3
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface((40, 40))
+        self.image.fill(BLUE)
+        self.rect = self.image.get_rect(center=(x, y))
+        self.velocity_x = 0
+        self.velocity_y = 0
+        self.speed = 5
+        self.health = 100
+        self.ammo = 100
+        
+    def handle_input(self, keys):
+        self.velocity_x = 0
+        self.velocity_y = 0
+        
+        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+            self.velocity_x = -self.speed
+        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+            self.velocity_x = self.speed
+        if keys[pygame.K_w] or keys[pygame.K_UP]:
+            self.velocity_y = -self.speed
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+            self.velocity_y = self.speed
+    
+    def update(self):
+        self.rect.x += self.velocity_x
+        self.rect.y += self.velocity_y
+        
+        # Keep player in bounds
+        self.rect.x = max(0, min(self.rect.x, SCREEN_WIDTH - self.rect.width))
+        self.rect.y = max(0, min(self.rect.y, SCREEN_HEIGHT - self.rect.height))
+    
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface((35, 35))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect(center=(x, y))
+        self.velocity_x = random.choice([-2, 2])
+        self.velocity_y = random.choice([-2, 2])
+        self.health = 30
+        self.shoot_cooldown = 0
+        
+    def update(self):
+        self.rect.x += self.velocity_x
+        self.rect.y += self.velocity_y
+        
+        # Bounce off walls
+        if self.rect.left <= 0 or self.rect.right >= SCREEN_WIDTH:
+            self.velocity_x *= -1
+        if self.rect.top <= 0 or self.rect.bottom >= SCREEN_HEIGHT:
+            self.velocity_y *= -1
+        
+        # Keep in bounds
+        self.rect.x = max(0, min(self.rect.x, SCREEN_WIDTH - self.rect.width))
+        self.rect.y = max(0, min(self.rect.y, SCREEN_HEIGHT - self.rect.height))
+        
+        if self.shoot_cooldown > 0:
+            self.shoot_cooldown -= 1
+    
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, target_x, target_y, is_player=True):
+        super().__init__()
+        self.image = pygame.Surface((5, 5))
+        self.image.fill(YELLOW if is_player else GREEN)
+        self.rect = self.image.get_rect(center=(x, y))
+        self.is_player = is_player
+        
+        # Calculate direction
+        dx = target_x - x
+        dy = target_y - y
+        distance = math.sqrt(dx**2 + dy**2)
+        
+        self.speed = 8
+        if distance > 0:
+            self.velocity_x = (dx / distance) * self.speed
+            self.velocity_y = (dy / distance) * self.speed
+        else:
+            self.velocity_x = 0
+            self.velocity_y = 0
+    
+    def update(self):
+        self.rect.x += self.velocity_x
+        self.rect.y += self.velocity_y
+        
+        # Remove if out of bounds
+        if (self.rect.x < 0 or self.rect.x > SCREEN_WIDTH or
+            self.rect.y < 0 or self.rect.y > SCREEN_HEIGHT):
+            self.kill()
+    
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+class GunGame:
+    def __init__(self):
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption("Gun Game")
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font(None, 36)
+        self.small_font = pygame.font.Font(None, 24)
+        self.state = GameState.PLAYING
+        
+        # Sprites
+        self.player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.enemies = []
+        self.player_bullets = []
+        self.enemy_bullets = []
+        
+        self.score = 0
+        self.wave = 1
+        self.enemies_killed_this_wave = 0
+        self.enemies_per_wave = 3
+        
+        self.spawn_enemies(self.enemies_per_wave)
+    
+    def spawn_enemies(self, count):
+        for _ in range(count):
+            x = random.randint(50, SCREEN_WIDTH - 50)
+            y = random.randint(50, SCREEN_HEIGHT - 50)
+            # Make sure enemies don't spawn on player
+            while abs(x - self.player.rect.centerx) < 100 and abs(y - self.player.rect.centery) < 100:
+                x = random.randint(50, SCREEN_WIDTH - 50)
+                y = random.randint(50, SCREEN_HEIGHT - 50)
+            self.enemies.append(Enemy(x, y))
+    
+    def handle_input(self):
+        keys = pygame.key.get_pressed()
+        self.player.handle_input(keys)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return False
+                if event.key == pygame.K_p:
+                    self.state = GameState.PAUSED if self.state == GameState.PLAYING else GameState.PLAYING
+                if event.key == pygame.K_SPACE and self.state == GameState.GAME_OVER:
+                    self.__init__()  # Restart game
+            if event.type == pygame.MOUSEBUTTONDOWN and self.state == GameState.PLAYING:
+                if self.player.ammo > 0:
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+                    bullet = Bullet(self.player.rect.centerx, self.player.rect.centery,
+                                  mouse_x, mouse_y, is_player=True)
+                    self.player_bullets.append(bullet)
+                    self.player.ammo -= 1
+        
+        return True
+    
+    def update(self):
+        if self.state != GameState.PLAYING:
+            return
+        
+        self.player.update()
+        
+        # Update enemies
+        for enemy in self.enemies[:]:
+            enemy.update()
+            
+            # Enemy AI - shoot towards player
+            if enemy.shoot_cooldown <= 0:
+                bullet = Bullet(enemy.rect.centerx, enemy.rect.centery,
+                              self.player.rect.centerx, self.player.rect.centery,
+                              is_player=False)
+                self.enemy_bullets.append(bullet)
+                enemy.shoot_cooldown = 60  # Shoot every 1 second
+        
+        # Update bullets
+        for bullet in self.player_bullets[:]:
+            bullet.update()
+            if not bullet.alive():
+                self.player_bullets.remove(bullet)
+        
+        for bullet in self.enemy_bullets[:]:
+            bullet.update()
+            if not bullet.alive():
+                self.enemy_bullets.remove(bullet)
+        
+        # Check collisions - player bullets hitting enemies
+        for bullet in self.player_bullets[:]:
+            for enemy in self.enemies[:]:
+                if bullet.rect.colliderect(enemy.rect):
+                    enemy.health -= 10
+                    if bullet in self.player_bullets:
+                        self.player_bullets.remove(bullet)
+                    
+                    if enemy.health <= 0:
+                        self.enemies.remove(enemy)
+                        self.score += 100
+                        self.enemies_killed_this_wave += 1
+                        
+                        # Check if wave is complete
+                        if self.enemies_killed_this_wave >= self.enemies_per_wave:
+                            self.wave += 1
+                            self.enemies_per_wave += 2
+                            self.enemies_killed_this_wave = 0
+                            self.player.ammo = min(self.player.ammo + 50, 200)
+                            self.spawn_enemies(self.enemies_per_wave)
+        
+        # Check collisions - enemy bullets hitting player
+        for bullet in self.enemy_bullets[:]:
+            if bullet.rect.colliderect(self.player.rect):
+                self.player.health -= 5
+                if bullet in self.enemy_bullets:
+                    self.enemy_bullets.remove(bullet)
+                
+                if self.player.health <= 0:
+                    self.state = GameState.GAME_OVER
+    
+    def draw(self):
+        self.screen.fill(BLACK)
+        
+        # Draw game objects
+        self.player.draw(self.screen)
+        for enemy in self.enemies:
+            enemy.draw(self.screen)
+        for bullet in self.player_bullets:
+            bullet.draw(self.screen)
+        for bullet in self.enemy_bullets:
+            bullet.draw(self.screen)
+        
+        # Draw UI
+        health_text = self.font.render(f"Health: {self.player.health}", True, RED)
+        ammo_text = self.font.render(f"Ammo: {self.player.ammo}", True, YELLOW)
+        score_text = self.font.render(f"Score: {self.score}", True, WHITE)
+        wave_text = self.font.render(f"Wave: {self.wave}", True, GREEN)
+        
+        self.screen.blit(health_text, (10, 10))
+        self.screen.blit(ammo_text, (10, 50))
+        self.screen.blit(score_text, (SCREEN_WIDTH - 250, 10))
+        self.screen.blit(wave_text, (SCREEN_WIDTH - 250, 50))
+        
+        if self.state == GameState.PAUSED:
+            pause_text = self.font.render("PAUSED", True, YELLOW)
+            self.screen.blit(pause_text, (SCREEN_WIDTH // 2 - 60, SCREEN_HEIGHT // 2))
+        
+        if self.state == GameState.GAME_OVER:
+            game_over_text = self.font.render("GAME OVER", True, RED)
+            final_score_text = self.small_font.render(f"Final Score: {self.score}", True, WHITE)
+            restart_text = self.small_font.render("Press SPACE to restart", True, WHITE)
+            
+            self.screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 - 60))
+            self.screen.blit(final_score_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2))
+            self.screen.blit(restart_text, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 60))
+        
+        pygame.display.flip()
+    
+    def run(self):
+        running = True
+        while running:
+            running = self.handle_input()
+            self.update()
+            self.draw()
+            self.clock.tick(FPS)
+        
+        pygame.quit()
+
+if __name__ == "__main__":
+    game = GunGame()
+    game.run()
